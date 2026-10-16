@@ -19,7 +19,7 @@ Teach the core idea through Farama’s open-source MiniGrid. Attendees can chang
 
 Keep the claim precise: this is tabular Q-learning over an intentionally compact, fully observed state, not production RL or MiniGrid’s usual partial-observation benchmark. The goal is to let hackers understand the learning loop and see their code run in a CPU sandbox.
 
-**Core takeaway:** An agent is more useful when it can safely act in a real environment, and developers can inspect and reset that environment quickly.
+**Core takeaway:** Explore first, exploit once you know enough, and decide on purpose instead of by default. The workshop is built around this one principle — the epsilon dial in the demo is a visible, re-runnable version of a tradeoff every hacker is already making about their own project this weekend. Daytona is deliberately not the subject of the talk; it's revealed late, as the quiet thing that made it cheap to run the experiment twice in front of the room instead of once.
 
 ## Opening remarks: 5-minute shape
 
@@ -37,16 +37,16 @@ Avoid lengthy company history, unsupported performance claims, and a feature tou
 
 **Working title:** *Teach an Agent to Learn in a Daytona CPU Sandbox*
 
-Use the complete [45-minute speaker script](45_MINUTE_SCRIPT.md) to run the workshop. It includes the audience vote, the live parameter experiment, the Daytona SDK walkthrough, and the prepared fallback.
+Use the complete [45-minute speaker script](45_MINUTE_SCRIPT.md) to run the workshop. It is decision-first: the audience bets on an outcome before any theory, the live browser app runs their pick, and the "teaching" happens on demand in answer to whatever's asked during the run rather than as a scheduled lecture block. A bare-bones 9-slide deck (no polish, mostly single images or single lines) supports the beats; the live app is the main visual for most of the session. The Daytona reveal is held to the last third and kept to one toggle and one sentence — see "Unifying idea" above for why.
 
 | Time | Activity | Attendee outcome |
 |---|---|---|
-| 0–5 min | Cold open: watch a deliberately imperfect agent tackle a tiny grid game | Understand the challenge and see the target result |
-| 5–10 min | Explain the loop: observe → act → get feedback → change policy/reward → rerun | Have a simple model of agent iteration |
-| 10–15 min | Use the Daytona Python SDK to create a CPU sandbox and run the demo there | Understand the SDK → sandbox → process execution path |
-| 15–30 min | Guided build: adjust epsilon decay or learning rate, run the agent, inspect progress | Make and observe one meaningful change in the Q-table policy |
-| 30–38 min | Challenge round: evaluate the greedy policy from several start positions; compare parameter settings | See whether a learned policy works across different starting states |
-| 38–45 min | Debrief, connect the pattern to real coding agents, share starter materials and next step | Leave with a reusable idea and way to continue |
+| 0–3 min | Cold open: watch a deliberately imperfect agent fail, no explanation yet | See the target result and a question worth holding onto |
+| 3–9 min | Name the explore/exploit dial, audience votes on an epsilon value and predicts the outcome | Make a concrete, falsifiable bet before getting any theory |
+| 9–20 min | Run the audience's pick live in the browser app; field whatever technical questions come up | Watch a real run and get explanation only where it's asked for |
+| 20–30 min | Compare the result to the prediction; generalize the dial to their own hackathon project | See whether their bet held and connect it to their own weekend |
+| 30–40 min | Second round with a new dial, pick; quiet reveal of the Local CPU / Daytona toggle on the same button | Make a second, more informed prediction; see the sandbox lifecycle without a product pitch |
+| 40–45 min | Close on the one-sentence principle, point to starter materials | Leave with a reusable idea and a way to continue |
 | 45–60 min | Optional Q&A / retries if the organizer confirms a 60-minute slot | Extra help without making the core session depend on it |
 
 ### Workshop design principles
@@ -71,7 +71,7 @@ Use a screen with large visual feedback, a concise one-page handout/QR code, and
 
 ## Demo and materials to build
 
-1. **Runnable MiniGrid/agent prototype:** MiniGrid Empty-8x8, tabular Q-learning, adjustable learning parameters, deterministic seed, visible success checkpoints, and policy rollouts.
+1. **Runnable MiniGrid/agent prototype:** MiniGrid DoorKey-8x8, tabular Q-learning, adjustable learning parameters, deterministic maze seeds, visible success checkpoints, and policy rollouts.
 2. **Daytona-backed execution path:** create a CPU sandbox with the Python SDK, install MiniGrid, transfer the demo script, run training in the sandbox, and clean up the sandbox. Confirm the SDK flow with the Daytona team before the event.
 3. **Workshop starter kit:** prerequisites, one-click or short setup path, step-by-step exercise, troubleshooting, cleanup instructions, and take-home links.
 4. **Opening visual:** one slide or a short prerecorded clip showing failure → change → improved attempt.

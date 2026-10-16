@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_PID=""
+FRONTEND_PID=""
+
+backend_ready() {
+  curl --silent --show-error --fail --max-time 2 http://127.0.0.1:8000/api/health 2>/dev/null \
+    | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'
+}
+
+frontend_ready() {
+  curl --silent --show-error --fail --max-time 2 http://127.0.0.1:5174/ 2>/dev/null \
+    | grep -q '/@vite/client'
+}
+
+cleanup() {
+  trap - EXIT INT TERM
+  [[ -z "$BACKEND_PID" ]] || kill "$BACKEND_PID" 2>/dev/null || true
+  [[ -z "$FRONTEND_PID" ]] || kill "$FRONTEND_PID" 2>/dev/null || true
+  [[ -z "$BACKEND_PID" ]] || wait "$BACKEND_PID" 2>/dev/null || true
+  [[ -z "$FRONTEND_PID" ]] || wait "$FRONTEND_PID" 2>/dev/null || true
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Error: uv is required. Install it from https://docs.astral.sh/uv/" >&2
+  exit 1
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "Error: npm is required. Install Node.js from https://nodejs.org/" >&2
+  exit 1
+fi
+
+cd "$ROOT_DIR"
+if [[ ! -d frontend/node_modules ]]; then
+  echo "Installing frontend dependencies..."
+  (cd frontend && npm install)
+fi
+
+if backend_ready; then
+  echo "Using backend already running at http://localhost:8000"
+else
+  echo "Starting backend at http://localhost:8000"
+  uv run uvicorn backend.app:app --reload --port 8000 &
+  BACKEND_PID=$!
+fi
+
+if frontend_ready; then
+  echo "Using frontend already running at http://localhost:5174"
+else
+  echo "Starting frontend at http://localhost:5174"
+  (cd frontend && exec npm run dev) &
+  FRONTEND_PID=$!
+fi
+
+echo "Open http://localhost:5174 in your browser. Press Ctrl+C to stop both servers."
+
+if [[ -z "$BACKEND_PID" && -z "$FRONTEND_PID" ]]; then
+  echo "Both project servers were already running."
+  exit 0
+fi
+
+# Keep both servers attached to this terminal and stop the pair if either exits.
+while true; do
+  if [[ -n "$BACKEND_PID" ]] && ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+    wait "$BACKEND_PID"
+    exit $?
+  fi
+  if [[ -n "$FRONTEND_PID" ]] && ! kill -0 "$FRONTEND_PID" 2>/dev/null; then
+    wait "$FRONTEND_PID"
+    exit $?
+  fi
+  sleep 1
+done

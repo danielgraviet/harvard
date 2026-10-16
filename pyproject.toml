@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "daytona>=0.224.0",
+    "fastapi>=0.115.0",
     "minigrid==3.1.0",
     "pillow>=10.0.0",
     "python-dotenv>=1.0.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [project.scripts]
@@ -20,3 +22,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 py-modules = ["daytona_runner", "gridworld", "main"]
+packages = ["backend"]

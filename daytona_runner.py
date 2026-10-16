@@ -8,7 +8,7 @@ from pathlib import Path
 from daytona import Daytona
 
 from gridworld import (
-    DEMO_STARTS,
+    evaluation_starts,
     failure_filename,
     learning_filename,
     policy_filename,
@@ -86,7 +86,7 @@ def run_daytona(
 
         output_dir.mkdir(parents=True, exist_ok=True)
         filenames = [failure_filename(run_id), learning_filename(run_id)]
-        filenames.extend(policy_filename(start, run_id) for start in DEMO_STARTS)
+        filenames.extend(policy_filename(start, run_id) for start in evaluation_starts(seed))
         downloaded: list[Path] = []
         for filename in filenames:
             local_path = output_dir / filename

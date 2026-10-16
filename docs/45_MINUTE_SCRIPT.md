@@ -1,192 +1,140 @@
-# Teach an Agent to Learn in a Daytona CPU Sandbox
+# Workshop script: Explore vs. Exploit
 
-## Session setup
+## The one thing that should stick
 
-This script is written for a 45-minute workshop with undergraduate hackers. The presenter drives the Daytona account and terminal. Attendees do not need an API key or a local environment. They make one decision about the learner, predict what will happen, and compare the resulting path with a prepared baseline.
+**Exploration vs. exploitation.** Early on, try things and gather information. Later, stop exploring and use what you've learned. Every attendee is living this dial all weekend on their own project — this workshop just gives them a visible, re-runnable version of it. Daytona is not the lesson; it's the thing quietly making it cheap to try things twice. Don't pitch it. Let the last five minutes reveal it.
 
-The throughline is that an agent's work happens inside an environment. The audience sees one small environment, watches an agent fail, changes one training setting, and follows the run from sandbox creation to the saved GIF. The MiniGrid example teaches the experiment loop, while the separate Daytona infrastructure benchmark measures large-scale sandbox performance.
+## How this script works
+
+This is decision-first, not lecture-first. The audience makes a bet before they get any theory, and the "teaching" happens on demand — in answer to whatever they ask while the run is in progress — instead of as a scheduled block. If nobody asks, don't volunteer it; keep the focus on the choice and the result.
+
+Slides are a bare-bones deck: no logos beyond a small mark on the title slide, no gradients, no bullet animations. Each slide is a single image, a single question, or a short line of plain text — something to look at while you talk, not something to read while you wait. Most of the 45 minutes is you driving the live app on screen, not the deck.
+
+**Total slide count: 9.** Build them in that order; the script tells you when to advance.
 
 ### Before the session
 
-- Run the default Daytona demo with seed `7` and `2,000` episodes. Keep the resulting GIFs and command output available offline.
-- Test the live Daytona command below from the presentation laptop. Keep the API key in the local environment. Do not put it on screen or in the sandbox.
-- Keep the failure example and progress GIFs open in a local viewer. The failure example is an early policy that moves from `(1, 1)` to `(4, 6)`, comes within two cells of the goal, and fails to finish.
-- Keep the command output or a short terminal recording ready in case the network or service is unavailable. Explain when you are showing a prepared result.
-- Ask the room to vote by raised hands. No one needs to create an account or install packages during the session.
+- Have the browser app running and visible full-screen: backend (`uv run uvicorn backend.app:app --reload --port 8000`) and frontend (`cd frontend && npm run dev`, open `localhost:5174`) both up and warm before the room fills. Load it once yourself so the first real run isn't also the first-ever request.
+- Set "Where should it run?" to **Local CPU** and leave it there until the reveal at minute 30. Keep seed fixed at `7` for both rounds so the only thing that changes is the dial the room picked.
+- Have the failure GIF (`display/failed-policy-example-8x8-showcase.gif`) and the progress GIF open locally as a network-independent fallback. If the app or Wi-Fi dies, say so plainly and switch to the GIFs — don't pretend it's live.
+- `DAYTONA_API_KEY` lives in `.env` on the presentation laptop only. Never on screen, never typed live.
+- Decide who is "room 1" and "room 2" for the vote (e.g., left half / right half, or odd/even rows) so counting hands is fast.
 
-The prepared default run uses `--epsilon-end 0.04`. For the live experiment, ask the audience to choose between that value and `0.4`. The second value keeps more random exploration in the later episodes. Treat the choice as a hypothesis. The run may confirm or challenge what the audience expects.
+### If someone asks before you planned to explain it
 
-The time blocks include the audience's responses, short pair discussions, and the live Daytona run. Leave silence after each question so attendees have time to think. Do not fill every pause with more explanation.
+Keep these one-liners ready, but don't recite them unprompted — only answer what's actually asked.
 
-## 0:00–5:00 | Open with the failed run
+- *What's actually being learned?* A table of values, one row per (position, facing, key possession, and door state), one column per action. Training nudges the values toward "what worked."
+- *What's alpha / gamma?* Alpha: how much each new result changes the table. Gamma: how much the agent cares about rewards further in the future.
+- *Why not a neural network?* The maze is small enough that a plain table is fast to build and makes it easy to show exactly which action values changed.
+- *What is Daytona doing right now?* (Early ask) "We're running this on this laptop's CPU right now — hang on, that's actually where we're headed at the end." Then move on; don't jump ahead of the script.
 
-*Show the failed-policy GIF. Let the agent move for a few seconds before speaking over it.*
+---
 
-“I want to start with an agent that almost makes it. It starts in the upper-left part of the room, travels across the grid, and gets close to the goal. The agent still fails to reach the goal. Take a moment to look at the path. Where do you think it got stuck?”
+## 0:00–3:00 | Open cold, no explanation
 
-*Give the room a few seconds to answer. Take two or three responses, then ask attendees to compare their explanations with the person next to them for one minute.*
+**Slide 1 — title.** Workshop name only, small Daytona mark in the corner. Nothing else. Advance to Slide 2 as you start talking.
 
-“Before we explain the learner, take one minute with the person next to you. Talk about what you would want to inspect before changing the agent. Would you look at its route, the number of steps, or the reward?”
+**Slide 2 — the failure GIF, full-bleed, no caption.**
 
-*After one minute, take two brief answers and connect them to the saved trajectory.*
+*Let it play for a few seconds before saying anything.*
 
-“The goal is in the lower-right corner. This run reaches `(4, 6)`, while the goal is `(6, 6)`. It gets close, but the policy it has learned so far does not finish the task. The useful part is that we can see what it tried. We have a specific run to inspect, rather than only a score that says it failed.”
+"This agent tried to get from the top-left of this room to the goal in the bottom-right. Watch what happens."
 
-“You are here during a 36-hour hackathon, so you will probably make many attempts at your own projects. Some attempts will work, and some will fail in ways that are difficult to reproduce. Today we will use a small gridworld to look at one complete loop: run an agent, inspect its behavior, change one setting, and compare the next result.”
+*Let it finish failing.*
 
-“By the end, I want you to have one practical pattern you can take into your own project. Give an agent a place to run, keep a record of what happened, and make it easy to run the experiment again.”
+"It gets close — two cells away — and doesn't make it. I'm not going to tell you why yet. Keep that picture in your head."
 
-## 5:00–10:00 | Explain the environment and learner
+---
 
-*Show the 8×8 board and point out the agent, the walls, and the goal.*
+## 3:00–9:00 | The choice
 
-“This room is an 8-by-8 MiniGrid environment. The outer cells are walls, and the goal is in the lower-right corner. The agent has three actions. It can turn left, turn right, or move forward. Each episode ends when the agent reaches the goal or reaches the step limit.”
+**Slide 3 — two words, side by side: "Explore" / "Exploit."** One short line under each: *Explore — try something new, see what happens. Exploit — use what already worked.* Nothing else on the slide.
 
-“For this introduction, the state contains the agent's position and direction. That gives us 144 possible states: 36 walkable positions and four directions. The state is fully observed because we read those values from the simulator. That is a deliberate simplification. MiniGrid can support partially observed tasks, but we are using this room to make the learning loop easy to see.”
+"Every agent — and honestly, every one of you this weekend — is running on a dial between these two. Explore: try the untested thing. Exploit: do the thing you already know works. Too much of either one, and you waste your 36 hours."
 
-“The learner keeps a table of values for each state and action. When an action leads to a useful result, the table updates. When the agent does not reach the goal, it still records the transitions it tried. The next action is selected using those values, with some random exploration mixed in during training.”
+"The agent you just watched has exactly this dial. It's called epsilon, and it controls how often the agent still takes a random action instead of its best-known one. We're going to set where that dial ends up — high or low — and bet on what happens."
 
-“The update moves the current value toward the reward plus the value of the best next action. The learning rate controls how much the new experience changes the table. The discount factor controls how much future rewards count. We keep the code tabular so we can connect each decision to a state, an action, and an update.”
+**Slide 4 — the two choices.** A screenshot of the app's "Ending exploration · ε" slider, with two marks on it: `0.04` and `0.4`. Caption: *Low ε at the end = mostly exploit. High ε at the end = keep exploring, even late.*
 
-“The exploration setting is called epsilon. A higher epsilon means the agent is more likely to take a random action. A lower epsilon means it is more likely to use the actions that already have higher values. Too little exploration can leave the agent with an incomplete picture of the room. Too much exploration can keep it taking random actions after it has found a useful route.”
+"Room 1, you're betting on ending at 0.04 — mostly exploiting by the end. Room 2, you're betting on 0.4 — still exploring a lot, even late in training. Same seed, same episode count, only this one number changes."
 
-*Show the progress GIF and let the audience watch the early trajectory transition into the later policy.*
+*Take the vote by raised hands. Ask one person from each side for their one-sentence reasoning — don't let this run long.*
 
-“This GIF comes from checkpoints in one training run. The early policy makes a visible mistake. Later checkpoints reach the goal from the same demonstration starts. We can compare the behavior directly because the run saves the paths as images.”
+"Hold that prediction. We're about to find out."
 
-“Take thirty seconds to follow one route with your eyes. Tell your partner where the agent first moves closer to the goal. Then tell them what you would inspect if the next checkpoint still failed.”
+---
 
-*Invite one person to point out the change between an early and a later checkpoint.*
+## 9:00–20:00 | Run it live
 
-## 10:00–15:00 | Show what Daytona runs
+*Switch from slides to the browser app, full screen. No slide for this block — the app is the visual.*
 
-*Show the Daytona command and then the relevant part of `daytona_runner.py`.*
+"I'm setting ending exploration to [the room's pick] and leaving everything else where it is. Seed 7, same as always."
 
-“The learner itself is ordinary Python code. Daytona provides the environment where the code runs. The Python SDK creates a sandbox. The runner installs MiniGrid and Pillow, uploads the learner and command-line entry point, and starts the training process inside that sandbox.”
+*Set the slider, hit **Train the agent**. While it runs, the progress bar and recent-success metric update live — point at them, but don't lecture over them.*
 
-“The run reports the sandbox CPU and GPU allocation before training starts. This demo uses one CPU and zero GPUs. The Q-table is small, and the workload does not need a neural network or a GPU.”
+"Watch 'recent success' and 'states learned' while this runs. We'll come back to what they mean once we have a result to look at."
 
-“When training and GIF rendering finish, the runner downloads the five images into our local `display` directory. It then deletes the temporary sandbox. That gives us a visible result from the run and a clean environment for a later attempt.”
+*This is dead time by design. Use it for whatever the room actually asks — pull from the one-liners above. If nobody asks anything, that's fine; let the run finish in near-silence. Don't fill it with a prepared lecture.*
 
-*Show the lifecycle on screen: create the sandbox, execute the process, download the GIFs, and delete the sandbox.*
+---
 
-*Put this short excerpt from `daytona_runner.py` on screen.*
+## 20:00–30:00 | Compare to the bet
 
-```python
-client = Daytona()
-sandbox = client.create()
-response = sandbox.process.exec(command, timeout=180)
-sandbox.fs.download_file(remote_path, local_path)
-client.delete(sandbox)
-```
+*When the run finishes, the rollout cards appear — one per starting position, each marked GOAL REACHED or DIDN'T REACH GOAL.*
 
-“These calls show the shape of the integration. The SDK creates the sandbox, the process API runs the command, the filesystem API brings the result back, and the client deletes the sandbox after the run.”
+"Here's the result. Room [whoever guessed right] — you called it. Room [the other], what do you think happened?"
 
-“Take one minute with your partner and match each call to the lifecycle step it performs. Then decide which result you would want to preserve after the sandbox is gone.”
+*Take one or two real answers before you explain anything. Let them use the rollout cards and paths, not just the label.*
 
-*Ask for one answer about the lifecycle and one answer about the saved artifact.*
+**Slide 5 — the same two words again: "Explore" / "Exploit," but now with the actual result filled in underneath each.** Keep it to the two numbers/outcomes, nothing more.
 
-“For this workshop, you do not need to provision anything yourself. I will run the SDK flow from the presentation laptop. You will choose the experiment and tell me what you expect to see. That lets us focus on the result without asking everyone to configure credentials.”
+"One run on one seed is a signal, not a proof. If we wanted to say '0.04 is just better,' we'd need to repeat this across a bunch of seeds and look at how much it varies. What we do know, from this run: [one sentence describing what actually happened]."
 
-## 15:00–20:00 | Let the audience choose the experiment
+**Slide 6 — one question, nothing else: "Where are you right now — exploring or exploiting?"**
 
-“We have a prepared baseline that ends training with epsilon at `0.04`. I want to compare it with a run that ends at `0.4`. In that run, the agent will continue taking random actions more often in the later episodes.”
+"Take ninety seconds with the person next to you. Tell them which one you're doing right now in your own project, and whether you think that's the right call for where you are in the weekend."
 
-“Before we run it, make a prediction. Do you expect the higher exploration rate to help the agent find a better route, or do you expect it to keep getting in its own way? Raise your hand for the first prediction. Raise your hand for the second.”
+*Give them the full ninety seconds. Take two answers.*
 
-*Count the responses. Ask one person from each side to explain their reasoning in one sentence.*
+---
 
-“We will hold the seed and episode count fixed, then change the final epsilon value. The seed makes this particular comparison repeatable. The parameter change gives us a clear question to investigate. We should look at both the success report and the path, because a single number does not show how the agent behaved.”
+## 30:00–40:00 | Second round, and the quiet reveal
 
-“If you are working with someone next to you, take one minute to decide what evidence would change your mind. Would you look at the recent success rate? Would you look at whether the agent reaches the goal from more than one start? Would you look at the path it takes?”
+**Slide 7 — "Your turn: pick one dial."** List the four: *learning rate (α) · future reward (γ) · starting exploration · ending exploration.* No definitions here — they've either asked already or are about to pick blind, which is fine.
 
-*Take one or two answers, then prepare the live command.*
+"New pick. Call out one of these four and a direction — higher or lower — and tell me what you expect to change: the success rate, or the path itself."
 
-“Write down your prediction in a short form. Record the epsilon value we chose, what you expect to happen to exploration, and one result you will use to judge the run. Keep that prediction beside you until we compare the GIFs.”
+*Take the call, set it, hit **Train the agent** again. While the second run goes, do the reveal:*
 
-## 20:00–30:00 | Run the audience's experiment
+**Slide 8 — a screenshot of the "Where should it run?" toggle: Local CPU / Daytona.** Caption: *Same button. Same code. Different place it runs.*
 
-*Run the selected Daytona command from the project directory.*
+"Quick thing before this run finishes. Everything you've watched so far ran on this laptop's CPU. This toggle right here — same experiment, same button — can send that exact code to run in a disposable sandbox instead: one gets created, your code runs inside it, the result comes back, and the sandbox is deleted. That's Daytona. It's the thing that let us run this twice in front of you in ten minutes instead of babysitting one machine."
 
-```bash
-uv run python main.py \
-  --backend daytona \
-  --episodes 2000 \
-  --seed 7 \
-  --epsilon-end 0.4
-```
+*Flip the toggle, optionally re-fire the same run live if time and network allow — otherwise just leave the explanation as spoken and move on. Don't dwell here; one breath, then back to the result on screen.*
 
-“The command is using the audience's setting. Daytona is creating a CPU sandbox now. While it starts, look at the baseline failure again and decide what you will compare when this run finishes.”
+"Back to your pick — here's what happened."
 
-*While the sandbox starts and installs its dependencies, explain the run output.*
+*Compare the second run's rollout cards to the prediction, same as before. Keep this shorter than the first comparison — they already know how to read the cards.*
 
-“While the job is starting, work with the person next to you on a second experiment you might run after this one. Choose one parameter, keep the seed fixed, and name the metric or trajectory detail you would compare. You have two minutes to agree on a prediction.”
+---
 
-*Give the room two minutes. Ask one pair to describe its proposed experiment while the sandbox continues.*
+## 40:00–45:00 | Close
 
-“The process prints its recent success rate at checkpoints. It also reports the number of states that have entered the Q-table. Those numbers tell us how much of the state space the agent has encountered and whether recent episodes are reaching the goal.”
+**Slide 9 — one sentence, large text, nothing else: "Explore first. Exploit once you know enough. Decide on purpose."**
 
-“On our last full run, training took about five seconds on one CPU. The end-to-end call also includes starting the sandbox and installing its dependencies. The workload is small enough that training itself is quick, and the remote run still gives us a real environment lifecycle to inspect.”
+"That's the whole thing. Explore first, exploit once you know enough, and decide on purpose instead of by default. The agent in this room did it with one number. You're going to do it all weekend with your project, your stack, your team."
 
-“The visual result matters too. The runner exports an early failed policy, the learning progression, and a final policy from three start positions. If the agent's score changes, we can inspect whether the route changed with it.”
+"The code, the starter kit, and today's slides are at [repo / QR]. Run it yourself, change a dial, see what happens. If you want to run it in an actual sandbox instead of your laptop, that's the same toggle you just saw."
 
-*When the output appears, point out the reported CPU and GPU allocation, the training checkpoints, the saved paths, and the sandbox cleanup.*
+*Take one or two final questions if the schedule allows. End on the sentence on screen, not on a Daytona pitch.*
 
-“The training loop completed inside the sandbox. The GIFs were downloaded to the laptop, and the temporary sandbox was deleted. The result stays available after the environment has been cleaned up.”
-
-*If the live run is still starting after two minutes, switch to the prepared Daytona GIFs and the saved output from the successful run. Tell the audience that you are using the prepared capture, then continue with the comparison.*
-
-## 30:00–37:00 | Compare the result with the prediction
-
-“Let us return to the prediction. The baseline ended with epsilon at `0.04`. Our audience-selected run ended at `0.4`. What changed in the success report?”
-
-*Read the observed output. Do not claim an outcome that the run did not produce.*
-
-“Now let us compare the paths. The failure example moved close to the goal but did not finish. The later policy shows whether this setting found a route and whether that route works from the other demonstration starts.”
-
-*Show the two GIFs side by side. Ask the room to name one difference in the paths before giving your interpretation.*
-
-“Take ninety seconds with your partner. Compare the baseline failure with the audience-selected run. Write down one difference you can point to in the path and one limitation of the comparison.”
-
-*Give the room ninety seconds. Ask two pairs to report their observations before you interpret the output.*
-
-“The setting changed how often the learner explored during training. The result tells us how that choice affected this seeded run. To assess whether one epsilon value works better in general, we would repeat the comparison across more seeds and report the variation.”
-
-“That distinction is useful in your own projects. One successful run gives us a useful signal to inspect. Broader claims call for repeated trials across multiple seeds, with the variation reported.”
-
-“We can also see why saving the trajectory helps. If the result is worse, we can inspect whether the agent never found the goal, reached a dead end, or kept taking random actions. The next experiment can respond to what happened in the previous one.”
-
-## 37:00–42:00 | Connect one learner to agent infrastructure
-
-“We have looked at one agent in one room. A coding agent has a similar need for an environment. It needs files, dependencies, a shell, and a way to run its tools and tests. If we want to run many experiments at once, each attempt needs an environment that can be created, used, and replaced.”
-
-“That is the infrastructure question behind this small demonstration. The gridworld is easy to understand, so we can focus on the lifecycle. The same pattern applies when an agent is changing code, running tests, or exploring a reinforcement-learning task.”
-
-“In my recent Daytona article, we measured sandbox startup for a separate CPU workload on NVIDIA Vera. In that test, 2,000 sandboxes were online in 27.4 seconds. That figure describes the infrastructure benchmark. Our MiniGrid run gives us a small, visible example of why agent work needs repeatable environments.”
-
-*Show the article title and the single benchmark result. Keep this section to the stated measurement and its workload.*
-
-“For a small experiment, we can run one sandbox. For a larger experiment, our command can queue independent runs and bound how many are active at once. The resource allocation and the workload still matter. We should measure the task we care about instead of assuming that a small demonstration predicts fleet performance.”
-
-“Take one minute to imagine that each team in this room has an agent that needs to edit code and run tests. What does each attempt need from its environment? Tell the person next to you one thing the environment must contain and one result the team should keep.”
-
-*Ask for two answers. Connect files, dependencies, processes, and test output to the environment each agent needs.*
-
-## 42:00–45:00 | Close with a practical takeaway
-
-“Here is the pattern I hope you take into the hackathon. Give the agent an environment where it can act. Keep enough output to understand what it did. Change one thing at a time, and make it straightforward to start another run.”
-
-“In this room, the agent came within two cells of the goal and failed. We could see the path, change its exploration setting, and run it again in a Daytona CPU sandbox. The same experiment loop can help you understand an agent that edits files, runs tests, or uses tools.”
-
-“The Q-learning code and the GIFs are in the starter project. You can run the learner locally, or use the Daytona backend to create a CPU sandbox and collect the output. You can also change the seed or exploration setting and see whether the result changes.”
-
-“Before we finish, think about one task in your project where you would want an agent to try, inspect, and retry its work. What environment would that agent need?”
-
-*Take one or two final answers. Point the audience to the project and Daytona resources, then leave time for questions if the schedule permits.*
+---
 
 ## Sources and presenter checks
 
-- The Daytona API lifecycle and resource allocation described here match the current runner in `daytona_runner.py`. The default run creates one CPU sandbox with no GPU, downloads five GIFs, and deletes the sandbox.
-- The example failure path and success results come from the seeded MiniGrid demo. Use the current artifacts in `display/` for the presentation.
-- The 2,000-sandbox startup result comes from [When 2,000 Agents Share One CPU](https://www.daytona.io/dotfiles/when-2000-agents-share-one-cpu). That article reports a distinct benchmark on NVIDIA Vera.
-- Confirm the event schedule, A/V, Wi-Fi, and Daytona product language before the workshop. Keep the prepared GIFs and terminal output available if the network is unavailable.
+- The live demo is the browser app (`backend/app.py` + `frontend/`), not the CLI — confirm both processes are warm before the room fills.
+- Keep seed fixed at `7` across both rounds so only the picked dial changes between comparisons.
+- The failure and progress GIFs in `display/` are the offline fallback if the app or network fails during the session.
+- The Daytona reveal (minute 30) is deliberately short — one toggle, one sentence on the lifecycle, back to the result. Resist expanding it into a benchmark or feature tour.
+- Confirm event A/V, Wi-Fi, and room layout (for the two-room vote) before the workshop.
